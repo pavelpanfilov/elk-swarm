@@ -1,0 +1,34 @@
+# (Required)
+# Rule name, must be unique
+name: Errors
+
+# (Required)
+# Type of alert.
+type: new_term
+
+index: logstash*
+
+# (Required, new_term specific)
+fields:
+ - "timestamp"
+
+# (Required)
+# A list of Elasticsearch filters used for find events
+# These filters are joined with AND and nested in a filtered query
+filter:
+- term:
+    messageDetail.sender: "shell"
+- term:
+    severity: "error"
+
+alert_text: "Sender: {1}\nSeverity: {2}\nError: {0}"
+alert_text_type: alert_text_only
+alert_text_args:
+- messageDetail.error
+- messageDetail.sender
+- severity
+
+alert:
+- "slack"
+slack:
+slack_webhook_url: "https://YOUR_SLACK_HOOK"

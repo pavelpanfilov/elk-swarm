@@ -1,0 +1,86 @@
+version: '3.4'
+
+x-deploy-opts: &deploy-opts
+  deploy:
+    mode: replicated
+    replicas: 1
+    placement:
+      constraints:
+        - node.labels.elk == true
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 10
+
+services:
+  elasticsearch:
+    << : *deploy-opts
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.0
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch:/usr/share/elasticsearch/data
+    environment:
+      ES_JAVA_OPTS: -Xmx1024m -Xms1024m
+      ELASTIC_PASSWORD: CHANGEME
+      discovery.type: single-node
+      cluster.name: docker-cluster
+      network.host: "0.0.0.0"
+      xpack.license.self_generated.type: trial
+      xpack.security.enabled: "true"
+      xpack.monitoring.collection.enabled: "true"
+
+  elastalert:
+    << : *deploy-opts
+    image: pavelpanfilov/var:elastalert
+    configs:
+      - source: elastalert_rules
+        target: /opt/rules/rules.yml
+    environment:
+      ELASTICSEARCH_HOST: elasticsearch
+      ELASTICSEARCH_PORT: "9200"
+      ELASTICSEARCH_USER: elastic
+      ELASTICSEARCH_PASSWORD: CHANGEME
+      ELASTALERT_INDEX: elastalert_status
+
+  logstash:
+    << : *deploy-opts
+    image: docker.elastic.co/logstash/logstash:7.5.0
+    ports:
+      - "8080:8080"
+      - "9600:9600"
+      - "4560:4560"
+    configs:
+      - source: logstash_config
+        target: /usr/share/logstash/pipeline/logstash.conf
+    environment:
+      LS_JAVA_OPTS: -Xmx512m -Xms512m
+      http.host: "0.0.0.0"
+      xpack.monitoring.elasticsearch.hosts: "http://elasticsearch:9200"
+      xpack.monitoring.enabled: "true"
+      xpack.monitoring.elasticsearch.username: elastic
+      xpack.monitoring.elasticsearch.password: CHANGEME
+
+  kibana:
+    << : *deploy-opts
+    image: docker.elastic.co/kibana/kibana:7.5.0
+    ports:
+      - "5601:5601"
+    configs:
+      - source: kibana_config
+        target: /usr/share/kibana/config/kibana.yml
+    environment:
+      NODE_OPTIONS: --max-old-space-size=2048
+
+
+configs:
+  logstash_config:
+    file: ./logstash/logstash.conf
+  kibana_config:
+    file: ./kibana/kibana.yml
+  elastalert_rules:
+    file: ./elastalert/rules.yml
+
+volumes:
+  elasticsearch:
