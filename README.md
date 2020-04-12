@@ -1,7 +1,8 @@
 # elk-swarm
 ELK cluster with elastalert for docker swarm
 
-Update elastic superuser password, slack hook url and elastalert rules (check sample in elastalert/rules.yml) before deployment.
+Xpack license set to basic. Xpack security disabled.
+Update slack hook url and elastalert rules (check sample in elastalert/rules.yml) before deployment.
 
 Update target nodes with elk label:
 ```shell
