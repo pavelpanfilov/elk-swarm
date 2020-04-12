@@ -12,21 +12,23 @@ index: logstash*
 fields:
  - "timestamp"
 
+# Timestamp field name in index - required if not equals @timestamp
+timestamp_field: timestamp
+
 # (Required)
 # A list of Elasticsearch filters used for find events
 # These filters are joined with AND and nested in a filtered query
 filter:
 - term:
-    messageDetail.sender: "shell"
-- term:
     severity: "error"
 
-alert_text: "Sender: {1}\nSeverity: {2}\nError: {0}"
+alert_text: "Severity: {0}\nSender: {1}\nappType: {2}\nError: {3}"
 alert_text_type: alert_text_only
-alert_text_args:
-- messageDetail.error
-- messageDetail.sender
-- severity
+alert_text_args: # specify fields here
+  - severity
+  - messageDetail.sender
+  - messageDetail.appType
+  - messageDetail.error
 
 alert:
 - "slack"
