@@ -11,5 +11,5 @@ $ docker node update --label-add elk=true YOUR_NODE
 
 Deploy:
 ```shell
-$ docker stack deploy -c docker-stack.yml elk
+$ TIMESTAMP="mon_$(date +%d.%m.%Y-%H%M%S)" INITIAL_MASTER="YOUR_NODE" docker stack deploy -c docker-stack.yml elk
 ```
